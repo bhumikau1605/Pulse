@@ -1,5 +1,15 @@
 # Pulse
 A Startup Metrics Dashboard
+
+
+██████╗ ██╗   ██╗██╗     ███████╗███████╗
+██╔══██╗██║   ██║██║     ██╔════╝██╔════╝
+██████╔╝██║   ██║██║     ███████╗█████╗  
+██╔═══╝ ██║   ██║██║     ╚════██║██╔══╝  
+██║     ╚██████╔╝███████╗███████║███████╗
+╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝
+
+
 # 📊 Pulse — Startup Growth Intelligence Dashboard
 
 A zero-dependency, single-file HTML dashboard for tracking startup growth metrics. Drop in your data via CSV upload, JSON upload, or manual entry — and instantly get a full picture of DAU/MAU stickiness, conversion funnels, cohort retention, churn analysis, and a north star health score.
