@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulse — Startup Growth Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #07090f;
+  --surface: #0c0f18;
+  --card: #10141f;
+  --card2: #131825;
+  --border: #1c2438;
+  --border2: #243048;
+  --accent: #4fffb0;
+  --accent-dim: rgba(79,255,176,0.10);
+  --accent2: #ff4e6a;
+  --accent2-dim: rgba(255,78,106,0.10);
+  --accent3: #4ea8ff;
+  --accent3-dim: rgba(78,168,255,0.10);
+  --accent4: #ffc84e;
+  --accent4-dim: rgba(255,200,78,0.10);
+  --text: #dde8f0;
+  --text2: #8899aa;
+  --text3: #445566;
+  --ok: #4fffb0;
+  --warn: #ffc84e;
+  --danger: #ff4e6a;
+  --funnel1: #4fffb0;
+  --funnel2: #4ea8ff;
+  --funnel3: #c084fc;
+  --funnel4: #ffc84e;
+  --funnel5: #ff4e6a;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(79,255,176,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,255,176,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+.header {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(7,9,15,0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--accent); text-transform: uppercase; }
+.brand-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); letter-spacing: 0.12em; text-transform: uppercase; }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.btn { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 18px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.18s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { border-color: var(--accent); color: var(--accent); }
+.btn.primary:hover { background: var(--accent); color: var(--bg); }
+.btn.danger-btn { border-color: var(--danger); color: var(--danger); }
+.btn.danger-btn:hover { background: var(--danger); color: #fff; }
+.tag { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; background: var(--accent-dim); color: var(--accent); }
+
+/* MAIN */
+.main { position: relative; z-index: 1; padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+
+/* INGEST PANEL */
+.ingest-panel { background: var(--card); border: 1px solid var(--border); padding: 32px; margin-bottom: 28px; position: relative; overflow: hidden; animation: fadeIn 0.4s ease; transition: opacity 0.3s; }
+.ingest-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent2)); }
+.ingest-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+.ingest-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); margin-bottom: 28px; letter-spacing: 0.04em; }
+
+.ingest-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media(max-width:900px){ .ingest-options { grid-template-columns: 1fr; } }
+
+.ingest-card { border: 1px dashed var(--border2); padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); }
+.ingest-card:hover, .ingest-card.active { border-color: var(--accent); background: var(--accent-dim); }
+.ingest-card .icon { font-size: 28px; margin-bottom: 10px; }
+.ingest-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.ingest-card p { font-size: 11px; color: var(--text2); line-height: 1.5; font-family: 'JetBrains Mono', monospace; }
+
+input[type=file] { display: none; }
+
+.schema-hint { background: var(--surface); border: 1px solid var(--border); padding: 16px 20px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); line-height: 1.8; margin-bottom: 0; }
+.schema-hint strong { color: var(--accent); }
+.schema-hint .sep { color: var(--text3); }
+
+/* MANUAL FORM */
+.manual-form { display: none; flex-direction: column; gap: 16px; margin-top: 20px; }
+.manual-form.visible { display: flex; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; }
+.field input, .field select { background: var(--surface); border: 1px solid var(--border2); color: var(--text); padding: 9px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; outline: none; transition: border-color 0.15s; }
+.field input:focus { border-color: var(--accent); }
+.manual-rows { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+.manual-row-item { display: flex; align-items: center; gap: 8px; background: var(--surface); padding: 8px 12px; border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); flex-wrap: wrap; }
+.manual-row-item b { color: var(--accent); }
+.del { cursor: pointer; color: var(--danger); margin-left: auto; font-size: 14px; }
+.del:hover { opacity: 0.7; }
+
+/* DASHBOARD */
+.dashboard { display: none; animation: fadeIn 0.5s ease; }
+.dashboard.visible { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* DATA PREVIEW */
+.data-preview { background: var(--card); border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 24px; }
+.data-preview-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.data-preview-title h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+.data-table-wrap { overflow-x: auto; max-height: 200px; overflow-y: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.data-table th { background: var(--surface); padding: 8px 12px; text-align: left; color: var(--accent); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; position: sticky; top: 0; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.data-table tr:hover td { background: var(--card2); color: var(--text); }
+
+/* INSIGHT BANNER */
+.insight-banner { background: var(--card); border: 1px solid var(--border2); border-left: 4px solid var(--accent3); padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 14px; }
+.insight-icon { font-size: 20px; flex-shrink: 0; }
+.insight-text h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.insight-text p { font-size: 12px; color: var(--text2); line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
+
+/* NORTH STAR */
+.north-star { background: linear-gradient(135deg, rgba(255,78,106,0.08), rgba(255,78,106,0.02)); border: 1px solid rgba(255,78,106,0.28); padding: 24px 28px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.north-star::after { content: '★ NORTH STAR'; position: absolute; top: 14px; right: 20px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--accent2); opacity: 0.5; }
+.ns-row { display: flex; align-items: flex-start; gap: 40px; flex-wrap: wrap; }
+.ns-kpi { flex-shrink: 0; }
+.ns-kpi-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; margin-bottom: 4px; }
+.ns-kpi-val { font-size: 56px; font-weight: 800; letter-spacing: -3px; line-height: 1; color: var(--accent2); }
+.ns-kpi-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.ns-alerts { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 6px; }
+.alert-item { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: rgba(0,0,0,0.3); border-left: 3px solid transparent; font-size: 12px; }
+.alert-item.danger { border-color: var(--danger); color: #ffb3c0; }
+.alert-item.warn { border-color: var(--warn); color: #ffe4a0; }
+.alert-item.ok { border-color: var(--ok); color: #a0ffda; }
+
+/* KPI ROW */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.kpi { background: var(--card); border: 1px solid var(--border); padding: 18px 20px; position: relative; overflow: hidden; transition: border-color 0.2s; }
+.kpi:hover { border-color: var(--border2); }
+.kpi-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.15em; color: var(--text2); text-transform: uppercase; margin-bottom: 8px; }
+.kpi-val { font-size: 30px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+.kpi-delta { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin-top: 6px; }
+.kpi-delta.up { color: var(--ok); }
+.kpi-delta.down { color: var(--danger); }
+.kpi-delta.flat { color: var(--text3); }
+.kpi-accent-line { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; opacity: 0.6; }
+
+/* SECTION LABEL */
+.section-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* CHARTS GRID */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+.charts-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+@media(max-width:1100px){ .charts-grid, .charts-grid.three { grid-template-columns: 1fr; } }
+
+.chart-card { background: var(--card); border: 1px solid var(--border); padding: 22px; }
+.chart-card-title { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+.chart-card-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); margin-bottom: 16px; }
+.chart-wrap { position: relative; height: 200px; }
+
+/* FUNNEL */
+.funnel-container { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.funnel-step { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--surface); position: relative; overflow: hidden; }
+.funnel-bar { position: absolute; left: 0; top: 0; bottom: 0; opacity: 0.12; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+.funnel-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text2); width: 130px; flex-shrink: 0; z-index: 1; }
+.funnel-count { font-size: 16px; font-weight: 700; z-index: 1; width: 90px; flex-shrink: 0; }
+.funnel-pct-wrap { flex: 1; z-index: 1; }
+.funnel-pct-bar { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+.funnel-pct-fill { height: 100%; border-radius: 2px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+.funnel-pct-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; margin-top: 4px; }
+.funnel-drop { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--danger); z-index: 1; width: 60px; text-align: right; flex-shrink: 0; }
+
+/* RETENTION TABLE */
+.retention-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.retention-table th { padding: 6px 8px; text-align: center; color: var(--text2); font-weight: 500; font-size: 9px; letter-spacing: 0.1em; }
+.retention-table td { padding: 5px 6px; text-align: center; border: 1px solid rgba(28,36,56,0.5); font-size: 10px; font-weight: 600; cursor: default; }
+
+/* DROPOFF */
+.dropoff-list { display: flex; flex-direction: column; gap: 8px; }
+.dropoff-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-left: 3px solid var(--border2); transition: border-color 0.2s; }
+.dropoff-item:hover { border-color: var(--accent2); }
+.dropoff-step { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text2); width: 150px; flex-shrink: 0; }
+.dropoff-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.dropoff-bar-fill { height: 100%; border-radius: 3px; }
+.dropoff-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; width: 50px; text-align: right; flex-shrink: 0; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-name">Pulse</div>
+    <div class="brand-sub">Growth Intelligence Dashboard</div>
+  </div>
+  <div class="header-actions">
+    <span id="dataTag" class="tag" style="display:none">● Live Data</span>
+    <button class="btn" onclick="loadDemo()">Load Demo Data</button>
+    <button class="btn primary" onclick="scrollToIngest()">+ Add Data</button>
+    <button class="btn danger-btn" id="resetBtn" style="display:none" onclick="resetDashboard()">Reset</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- INGEST PANEL -->
+  <div class="ingest-panel" id="ingestPanel">
+    <div class="ingest-title">Connect your data</div>
+    <div class="ingest-sub">Upload CSV / JSON, or enter monthly metrics manually — then watch your growth story unfold.</div>
+
+    <div class="ingest-options">
+      <div class="ingest-card" id="csvCard" onclick="document.getElementById('csvInput').click()">
+        <div class="icon">📊</div>
+        <h3>Upload CSV</h3>
+        <p>Columns: user_id, date, event<br>(signup / active / purchase / churn)<br>— or pre-aggregated monthly rows</p>
+        <input type="file" id="csvInput" accept=".csv,.tsv" onchange="handleCSV(event)">
+      </div>
+
+      <div class="ingest-card" id="jsonCard" onclick="document.getElementById('jsonInput').click()">
+        <div class="icon">{ }</div>
+        <h3>Upload JSON</h3>
+        <p>Array of event objects or pre-aggregated monthly metrics object</p>
+        <input type="file" id="jsonInput" accept=".json" onchange="handleJSON(event)">
+      </div>
+
+      <div class="ingest-card" id="manualCard" onclick="toggleManual()">
+        <div class="icon">✏️</div>
+        <h3>Manual Entry</h3>
+        <p>Type in monthly figures: DAU, MAU, signups, conversions, revenue, churn</p>
+      </div>
+    </div>
+
+    <div class="schema-hint">
+      <strong>CSV schema (event log):</strong>
+      <span class="sep"> | </span>
+      <strong>user_id</strong> · <strong>date</strong> (YYYY-MM-DD) · <strong>event</strong> (signup | active | purchase | churn)
+      <br>
+      <strong>CSV schema (aggregated):</strong>
+      <span class="sep"> | </span>
+      <strong>month</strong> (YYYY-MM) · <strong>dau</strong> · <strong>mau</strong> · <strong>signups</strong> · <strong>conversions</strong> · <strong>revenue</strong> · <strong>churned</strong> · <strong>visitors</strong>
+    </div>
+
+    <!-- Manual Form -->
+    <div class="manual-form" id="manualForm">
+      <div class="section-label" style="margin-top:8px">Add monthly row</div>
+      <div class="form-grid">
+        <div class="field"><label>Month (YYYY-MM)</label><input type="month" id="m_month"></div>
+        <div class="field"><label>Visitors (top-of-funnel)</label><input type="number" id="m_visitors" placeholder="e.g. 45000" min="0"></div>
+        <div class="field"><label>New Signups</label><input type="number" id="m_signups" placeholder="e.g. 2300" min="0"></div>
+        <div class="field"><label>DAU (avg daily active)</label><input type="number" id="m_dau" placeholder="e.g. 1200" min="0"></div>
+        <div class="field"><label>MAU (monthly active)</label><input type="number" id="m_mau" placeholder="e.g. 8500" min="0"></div>
+        <div class="field"><label>Conversions (paid)</label><input type="number" id="m_conversions" placeholder="e.g. 340" min="0"></div>
+        <div class="field"><label>Revenue ($)</label><input type="number" id="m_revenue" placeholder="e.g. 18500" min="0"></div>
+        <div class="field"><label>Churned Users</label><input type="number" id="m_churned" placeholder="e.g. 120" min="0"></div>
+      </div>
+      <div id="manualRows" class="manual-rows"></div>
+      <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
+        <button class="btn primary" onclick="addManualRow()">+ Add Row</button>
+        <button class="btn" onclick="buildFromManual()" id="buildBtn" style="display:none">Build Dashboard →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard" id="dashboard">
+
+    <!-- Preview -->
+    <div class="data-preview" id="dataPreview">
+      <div class="data-preview-title">
+        <h3>Data Preview</h3>
+        <span id="rowCount" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)"></span>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table" id="previewTable"></table>
+      </div>
+    </div>
+
+    <!-- Insight -->
+    <div class="insight-banner">
+      <div class="insight-icon">🔭</div>
+      <div class="insight-text">
+        <h4 id="insightTitle">Loading…</h4>
+        <p id="insightBody"></p>
+      </div>
+    </div>
+
+    <!-- North Star -->
+    <div class="north-star">
+      <div class="ns-row">
+        <div class="ns-kpi">
+          <div class="ns-kpi-label">DAU / MAU Stickiness</div>
+          <div class="ns-kpi-val" id="ns-val">—</div>
+          <div class="ns-kpi-sub" id="ns-sub"></div>
+        </div>
+        <div class="ns-alerts" id="ns-alerts"></div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="section-label">Key Performance Indicators</div>
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <!-- Growth Trends -->
+    <div class="section-label">Growth Trends</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">DAU / MAU Trend</div>
+        <div class="chart-card-sub">Daily vs Monthly active users over time</div>
+        <div class="chart-wrap"><canvas id="dauMauChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Revenue &amp; Signups</div>
+        <div class="chart-card-sub">Monthly revenue and new signups</div>
+        <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Funnel -->
+    <div class="section-label">Conversion Funnel</div>
+    <div class="chart-card" style="margin-bottom:24px">
+      <div class="chart-card-title">User Conversion Funnel</div>
+      <div class="chart-card-sub">Where users drop off on the journey to conversion — biggest drop-off highlighted</div>
+      <div class="funnel-container" id="funnelContainer"></div>
+    </div>
+
+    <!-- Retention + Dropoff -->
+    <div class="section-label">Retention &amp; Drop-off</div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">Cohort Retention Heatmap</div>
+        <div class="chart-card-sub">% of cohort retained each week after signup</div>
+        <div style="overflow-x:auto;margin-top:8px">
+          <table class="retention-table" id="retentionTable"></table>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Drop-off by Stage</div>
+        <div class="chart-card-sub">Where the biggest user losses occur</div>
+        <div class="dropoff-list" id="dropoffList" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Churn / Stickiness / Conv -->
+    <div class="section-label" style="margin-top:24px">Engagement Deep-Dive</div>
+    <div class="charts-grid three">
+      <div class="chart-card">
+        <div class="chart-card-title">Churn Rate</div>
+        <div class="chart-card-sub">Monthly churned users</div>
+        <div class="chart-wrap"><canvas id="churnChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Stickiness Ratio</div>
+        <div class="chart-card-sub">DAU/MAU % — benchmark: 20% good, 50%+ elite</div>
+        <div class="chart-wrap"><canvas id="stickinessChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Conversion Rate</div>
+        <div class="chart-card-sub">Signups → Paid %. SaaS avg: 3–5%</div>
+        <div class="chart-wrap"><canvas id="conversionChart"></canvas></div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /main -->
+
+<script>
+// ── STATE ──────────────────────────────────────────
+let monthlyData = [];
+let manualRows = [];
+let charts = {};
+
+// ── DEMO DATA ──────────────────────────────────────
+function loadDemo() {
+  monthlyData = [
+    { month:'2024-01', visitors:12000, signups:1800, dau:420,  mau:3200,  conversions:180, revenue:9200,  churned:95  },
+    { month:'2024-02', visitors:15000, signups:2200, dau:540,  mau:4100,  conversions:230, revenue:12000, churned:110 },
+    { month:'2024-03', visitors:19000, signups:2900, dau:680,  mau:5400,  conversions:310, revenue:16500, churned:130 },
+    { month:'2024-04', visitors:23000, signups:3100, dau:820,  mau:6800,  conversions:360, revenue:19800, churned:155 },
+    { month:'2024-05', visitors:28000, signups:3600, dau:970,  mau:8200,  conversions:420, revenue:23500, churned:170 },
+    { month:'2024-06', visitors:31000, signups:3200, dau:1050, mau:9100,  conversions:390, revenue:22000, churned:210 },
+    { month:'2024-07', visitors:34000, signups:3800, dau:1180, mau:10200, conversions:445, revenue:25800, churned:195 },
+    { month:'2024-08', visitors:29000, signups:2800, dau:1020, mau:9600,  conversions:370, revenue:21200, churned:280 },
+    { month:'2024-09', visitors:32000, signups:3400, dau:1120, mau:10500, conversions:410, revenue:23900, churned:240 },
+    { month:'2024-10', visitors:38000, signups:4100, dau:1350, mau:12000, conversions:510, revenue:29500, churned:220 },
+    { month:'2024-11', visitors:44000, signups:4800, dau:1580, mau:13800, conversions:600, revenue:35000, churned:205 },
+    { month:'2024-12', visitors:52000, signups:5500, dau:1820, mau:15600, conversions:710, revenue:42000, churned:190 },
+  ];
+  showDashboard('Demo Dataset (12 months)');
+}
+
+// ── CSV ────────────────────────────────────────────
+function handleCSV(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => processData(parseCSV(ev.target.result), f.name);
+  r.readAsText(f);
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toLowerCase());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(v => v.trim().replace(/"/g,''));
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = vals[i] || '');
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+}
+
+// ── JSON ───────────────────────────────────────────
+function handleJSON(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      processData(Array.isArray(data) ? data : (data.data || data.rows || []), f.name);
+    } catch { alert('Invalid JSON file.'); }
+  };
+  r.readAsText(f);
+}
+
+// ── PROCESS DATA ───────────────────────────────────
+function processData(rows, filename) {
+  if (!rows.length) { alert('No rows found in file.'); return; }
+  const cols = Object.keys(rows[0]).map(c => c.toLowerCase());
+  const isAgg = cols.some(c => ['month','mau','dau','signups'].includes(c));
+
+  if (isAgg) {
+    monthlyData = rows.map(r => ({
+      month:       r.month || r.Month || '',
+      visitors:    num(r.visitors || r.Visitors),
+      signups:     num(r.signups  || r.Signups),
+      dau:         num(r.dau      || r.DAU),
+      mau:         num(r.mau      || r.MAU),
+      conversions: num(r.conversions || r.Conversions),
+      revenue:     num(r.revenue  || r.Revenue),
+      churned:     num(r.churned  || r.Churned),
+    })).filter(r => r.month).sort((a,b) => a.month.localeCompare(b.month));
+  } else {
+    monthlyData = aggregateEvents(rows);
+  }
+
+  if (!monthlyData.length) { alert('Could not parse data. Check the schema hint.'); return; }
+  showDashboard(filename);
+}
+
+function aggregateEvents(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const date = r.date || r.Date || r.timestamp || '';
+    if (!date) return;
+    const month = date.substring(0, 7);
+    if (!map[month]) map[month] = { month, users: new Set(), daily: {}, signups:0, conversions:0, churned:0, revenue:0, visitors:0 };
+    const m = map[month];
+    const uid = r.user_id || r.userId || r.id || Math.random().toString();
+    const evt = (r.event || r.Event || r.type || '').toLowerCase();
+    const day = date.substring(0, 10);
+    m.users.add(uid);
+    if (!m.daily[day]) m.daily[day] = new Set();
+    m.daily[day].add(uid);
+    if (/signup|register|join/.test(evt)) m.signups++;
+    if (/purchase|convert|paid|subscribe/.test(evt)) { m.conversions++; m.revenue += num(r.amount || r.revenue || r.value || 50); }
+    if (/churn|cancel|unsubscribe/.test(evt)) m.churned++;
+    if (/visit|view|pageview/.test(evt)) m.visitors++;
+  });
+  return Object.values(map).sort((a,b) => a.month.localeCompare(b.month)).map(m => {
+    const dayAvgs = Object.values(m.daily).map(s => s.size);
+    const dau = dayAvgs.length ? Math.round(dayAvgs.reduce((a,b)=>a+b,0)/dayAvgs.length) : 0;
+    return { month: m.month, visitors: m.visitors || Math.round(m.users.size*3.5), signups: m.signups||m.users.size, dau, mau: m.users.size, conversions: m.conversions, revenue: m.revenue, churned: m.churned };
+  });
+}
+
+// ── MANUAL ENTRY ───────────────────────────────────
+function toggleManual() {
+  const form = document.getElementById('manualForm');
+  const card = document.getElementById('manualCard');
+  const vis = form.classList.toggle('visible');
+  card.classList.toggle('active', vis);
+}
+
+function addManualRow() {
+  const g = id => document.getElementById(id).value;
+  const month = g('m_month'); if (!month) { alert('Please select a month.'); return; }
+  const row = { month, visitors:num(g('m_visitors')), signups:num(g('m_signups')), dau:num(g('m_dau')), mau:num(g('m_mau')), conversions:num(g('m_conversions')), revenue:num(g('m_revenue')), churned:num(g('m_churned')) };
+  const idx = manualRows.findIndex(r => r.month === month);
+  if (idx >= 0) manualRows[idx] = row; else manualRows.push(row);
+  manualRows.sort((a,b) => a.month.localeCompare(b.month));
+  renderManualRows();
+}
+
+function renderManualRows() {
+  document.getElementById('manualRows').innerHTML = manualRows.map((r,i) => `
+    <div class="manual-row-item">
+      <b>${r.month}</b>
+      <span>DAU&nbsp;${r.dau}</span> · <span>MAU&nbsp;${r.mau}</span> ·
+      <span>Signups&nbsp;${r.signups}</span> · <span>Conv&nbsp;${r.conversions}</span> ·
+      <span>$${r.revenue.toLocaleString()}</span> · <span>Churn&nbsp;${r.churned}</span>
+      <span class="del" onclick="deleteManualRow(${i})">✕</span>
+    </div>`).join('');
+  document.getElementById('buildBtn').style.display = manualRows.length ? '' : 'none';
+}
+
+function deleteManualRow(i) { manualRows.splice(i,1); renderManualRows(); }
+
+function buildFromManual() {
+  if (!manualRows.length) return;
+  monthlyData = [...manualRows];
+  showDashboard('Manual Entry');
+}
+
+// ── SHOW DASHBOARD ─────────────────────────────────
+function showDashboard(source) {
+  if (!monthlyData.length) return;
+  document.getElementById('dashboard').classList.add('visible');
+  document.getElementById('dataTag').style.display = '';
+  document.getElementById('resetBtn').style.display = '';
+  const panel = document.getElementById('ingestPanel');
+  panel.style.opacity = '0.4';
+  panel.style.pointerEvents = 'none';
+  panel.style.marginBottom = '8px';
+
+  renderPreview(source);
+  renderInsight();
+  renderNorthStar();
+  renderKPIs();
+  renderFunnel();
+  renderRetention();
+  renderDropoff();
+  renderCharts();
+}
+
+// ── PREVIEW ────────────────────────────────────────
+function renderPreview(source) {
+  document.getElementById('rowCount').textContent = `${monthlyData.length} months · ${source}`;
+  const cols = ['month','visitors','signups','dau','mau','conversions','revenue','churned'];
+  document.getElementById('previewTable').innerHTML =
+    `<thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${monthlyData.map(r=>`<tr>${cols.map(c=>`<td>${c==='revenue'?'$'+num(r[c]).toLocaleString():r[c]||0}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+
+// ── INSIGHT ────────────────────────────────────────
+function renderInsight() {
+  const last = monthlyData[monthlyData.length-1];
+  const prev = monthlyData.length > 1 ? monthlyData[monthlyData.length-2] : null;
+  const churnRate = last.mau ? (last.churned/last.mau*100) : 0;
+  const convRate = last.signups ? (last.conversions/last.signups*100) : 0;
+  const stickiness = last.mau ? (last.dau/last.mau*100) : 0;
+  const mauGrowth = prev && prev.mau ? ((last.mau-prev.mau)/prev.mau*100).toFixed(1) : null;
+
+  let title, body;
+  if (churnRate > 6) {
+    title = '⚠️ High churn is your biggest threat right now';
+    body = `At ${churnRate.toFixed(1)}% monthly churn, you're losing a large share of your base each month. Prioritize exit surveys, onboarding improvement, and in-app engagement nudges before scaling acquisition.`;
+  } else if (convRate < 3) {
+    title = '💡 Low conversion rate — biggest growth lever to pull';
+    body = `Only ${convRate.toFixed(1)}% of signups convert to paid (SaaS avg: 3–5%). A/B test upgrade prompts, time-limited trials, and map the "aha moment" that correlates with conversion.`;
+  } else if (stickiness < 15) {
+    title = '📉 Low stickiness — users aren\'t returning daily';
+    body = `At ${stickiness.toFixed(1)}% DAU/MAU, the core product loop may not be habit-forming yet. Focus on notifications, daily-value delivery, and re-engagement flows.`;
+  } else {
+    title = `✅ Healthy growth${mauGrowth ? ` — MAU up ${mauGrowth}% MoM` : ''} — focus on scaling what works`;
+    body = `Key metrics are in good shape. Double down on your best acquisition channels and invest in retention infrastructure to compound your growing base.`;
+  }
+  document.getElementById('insightTitle').textContent = title;
+  document.getElementById('insightBody').textContent = body;
+}
+
+// ── NORTH STAR ─────────────────────────────────────
+function renderNorthStar() {
+  const last = monthlyData[monthlyData.length-1];
+  const prev = monthlyData.length > 1 ? monthlyData[monthlyData.length-2] : null;
+  const s = last.mau ? (last.dau/last.mau*100) : 0;
+  const churnRate = last.mau ? (last.churned/last.mau*100) : 0;
+  const convRate = last.signups ? (last.conversions/last.signups*100) : 0;
+  const mauGrowth = prev && prev.mau ? ((last.mau-prev.mau)/prev.mau*100) : null;
+
+  document.getElementById('ns-val').textContent = s.toFixed(1) + '%';
+  document.getElementById('ns-sub').textContent = s >= 50 ? '🔥 Elite engagement (50%+ tier)' : s >= 20 ? '✅ Healthy engagement' : '⚠️ Below 20% benchmark — needs attention';
+
+  const alerts = [];
+  if (s < 10) alerts.push({ t:'danger', i:'🔴', m:`DAU/MAU ${s.toFixed(1)}% — critically low. Users aren't returning.` });
+  else if (s < 20) alerts.push({ t:'warn', i:'🟡', m:`DAU/MAU ${s.toFixed(1)}% — below 20% healthy benchmark.` });
+  else alerts.push({ t:'ok', i:'🟢', m:`DAU/MAU ${s.toFixed(1)}% — strong stickiness.` });
+
+  if (churnRate > 8) alerts.push({ t:'danger', i:'🔴', m:`Churn ${churnRate.toFixed(1)}% — critical. MRR is at serious risk.` });
+  else if (churnRate > 4) alerts.push({ t:'warn', i:'🟡', m:`Churn ${churnRate.toFixed(1)}% — approaching danger zone (>8%).` });
+  else if (churnRate > 0) alerts.push({ t:'ok', i:'🟢', m:`Churn ${churnRate.toFixed(1)}% — healthy retention.` });
+
+  if (convRate < 2) alerts.push({ t:'danger', i:'🔴', m:`Conversion ${convRate.toFixed(1)}% — well below 3–5% SaaS average.` });
+  else if (convRate < 3) alerts.push({ t:'warn', i:'🟡', m:`Conversion ${convRate.toFixed(1)}% — just below SaaS average.` });
+  else alerts.push({ t:'ok', i:'🟢', m:`Conversion ${convRate.toFixed(1)}% — at or above industry average.` });
+
+  if (mauGrowth !== null) {
+    if (mauGrowth < 0) alerts.push({ t:'danger', i:'🔴', m:`MAU declined ${Math.abs(mauGrowth).toFixed(1)}% MoM — negative growth.` });
+    else if (mauGrowth < 5) alerts.push({ t:'warn', i:'🟡', m:`MAU grew ${mauGrowth.toFixed(1)}% MoM — below 10% healthy threshold.` });
+    else alerts.push({ t:'ok', i:'🟢', m:`MAU grew ${mauGrowth.toFixed(1)}% MoM — solid momentum.` });
+  }
+
+  document.getElementById('ns-alerts').innerHTML = alerts.map(a =>
+    `<div class="alert-item ${a.t}"><span>${a.i}</span>${a.m}</div>`
+  ).join('');
+}
+
+// ── KPIs ───────────────────────────────────────────
+function renderKPIs() {
+  const last = monthlyData[monthlyData.length-1];
+  const prev = monthlyData[monthlyData.length-2] || {};
+  const pct = (a,b) => b ? (((a-b)/b)*100).toFixed(1) : null;
+
+  const kpis = [
+    { label:'Monthly Active', val: fmt(last.mau), d: pct(last.mau, prev.mau), color:'var(--accent3)' },
+    { label:'Daily Active',   val: fmt(last.dau), d: pct(last.dau, prev.dau), color:'var(--accent)' },
+    { label:'New Signups',    val: fmt(last.signups), d: pct(last.signups, prev.signups), color:'var(--accent)' },
+    { label:'Conversions',    val: fmt(last.conversions), d: pct(last.conversions, prev.conversions), color:'var(--accent4)' },
+    { label:'Revenue',        val: '$'+fmtK(last.revenue), d: pct(last.revenue, prev.revenue), color:'var(--accent4)' },
+    { label:'Churned',        val: fmt(last.churned), d: pct(last.churned, prev.churned), invert:true, color:'var(--accent2)' },
+    { label:'Conv. Rate',     val: (last.signups ? (last.conversions/last.signups*100).toFixed(1) : 0)+'%', d: null, color:'var(--accent)' },
+    { label:'ARPU',           val: '$'+(last.conversions ? Math.round(last.revenue/last.conversions) : 0), d: null, color:'var(--accent4)' },
+  ];
+
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => {
+    const d = parseFloat(k.d); const up = d > 0; const good = k.invert ? !up : up;
+    const cls = isNaN(d) ? 'flat' : (good ? 'up' : 'down');
+    const arrow = isNaN(d) ? '' : (up ? '▲' : '▼');
+    return `<div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-val" style="color:${k.color}">${k.val}</div>
+      ${isNaN(d)||k.d===null ? '' : `<div class="kpi-delta ${cls}">${arrow} ${Math.abs(d)}% vs prev</div>`}
+      <div class="kpi-accent-line" style="background:${k.color}"></div>
+    </div>`;
+  }).join('');
+}
+
+// ── FUNNEL ─────────────────────────────────────────
+function renderFunnel() {
+  const last = monthlyData[monthlyData.length-1];
+  const visitors    = last.visitors || last.signups * 6 || 1;
+  const signups     = last.signups || 0;
+  const activated   = Math.round(signups * 0.62);
+  const engaged     = Math.round(activated * 0.55);
+  const conversions = last.conversions || 0;
+  const retained    = Math.round(conversions * 0.78);
+
+  const steps = [
+    { name:'Visitors',   count:visitors,    color:'var(--funnel1)' },
+    { name:'Signups',    count:signups,     color:'var(--funnel2)' },
+    { name:'Activated',  count:activated,   color:'var(--funnel3)' },
+    { name:'Engaged',    count:engaged,     color:'var(--funnel4)' },
+    { name:'Converted',  count:conversions, color:'var(--funnel5)' },
+    { name:'Retained',   count:retained,    color:'var(--accent2)' },
+  ];
+
+  const drops = steps.map((s,i) => i === 0 ? 0 : ((steps[i-1].count - s.count)/steps[i-1].count));
+  const maxDrop = Math.max(...drops.slice(1));
+  const max = steps[0].count;
+
+  document.getElementById('funnelContainer').innerHTML = steps.map((s,i) => {
+    const pct  = max ? (s.count/max*100).toFixed(1) : 0;
+    const drop = i > 0 ? (drops[i]*100).toFixed(1) : null;
+    const isBiggest = i > 0 && drops[i] === maxDrop;
+    return `<div class="funnel-step" style="${isBiggest?'border:1px solid rgba(255,78,106,0.4)':''}">
+      <div class="funnel-bar" style="width:${pct}%;background:${s.color}"></div>
+      <div class="funnel-name">${s.name}${isBiggest?' 🔴':''}</div>
+      <div class="funnel-count" style="color:${s.color}">${fmt(s.count)}</div>
+      <div class="funnel-pct-wrap">
+        <div class="funnel-pct-bar"><div class="funnel-pct-fill" style="width:${pct}%;background:${s.color}"></div></div>
+        <div class="funnel-pct-label" style="color:${s.color}">${pct}% of total</div>
+      </div>
+      ${drop!==null ? `<div class="funnel-drop">-${drop}%</div>` : '<div class="funnel-drop"></div>'}
+    </div>`;
+  }).join('');
+}
+
+// ── RETENTION ──────────────────────────────────────
+function renderRetention() {
+  const cohorts = monthlyData.slice(-6);
+  const weeks = [0,1,2,3,4,5,6];
+  const base = [100, 62, 47, 37, 30, 25, 21];
+
+  const table = document.getElementById('retentionTable');
+  const hdr = `<thead><tr><th style="text-align:left">Cohort</th>${weeks.map(w=>`<th>W${w}</th>`).join('')}</tr></thead>`;
+  const rows = cohorts.map(c => {
+    const adj = c.mau ? -(c.churned/c.mau*20) : 0;
+    const curve = weeks.map((w,i) => {
+      if (i===0) return 100;
+      const n = ((Math.random()-0.5)*5);
+      return Math.max(5, Math.round(base[i] + adj + n));
+    });
+    const cells = curve.map((v,i) => {
+      const t = v/100;
+      const r = Math.round(255*(1-t) + 79*t);
+      const g = Math.round(78*(1-t) + 255*t);
+      const b = Math.round(106*(1-t) + 176*t);
+      return `<td style="background:rgba(${r},${g},${b},0.2);color:rgba(${r},${g},${b},1)">${v}%</td>`;
+    });
+    return `<tr><td style="color:var(--text2);text-align:left;padding:5px 8px;font-size:10px">${c.month}</td>${cells.join('')}</tr>`;
+  }).join('');
+  table.innerHTML = hdr + `<tbody>${rows}</tbody>`;
+}
+
+// ── DROPOFF ────────────────────────────────────────
+function renderDropoff() {
+  const last = monthlyData[monthlyData.length-1];
+  const visitors = last.visitors || last.signups * 6 || 1;
+  const signups = last.signups || 0;
+  const activated = Math.round(signups * 0.62);
+  const engaged = Math.round(activated * 0.55);
+  const conversions = last.conversions || 0;
+
+  const dropoffs = [
+    { from:'Visit → Signup',     lost: visitors-signups,   pct: ((visitors-signups)/visitors*100).toFixed(0), color:'var(--funnel2)' },
+    { from:'Signup → Activated', lost: signups-activated,  pct: ((signups-activated)/signups*100).toFixed(0),  color:'var(--funnel3)' },
+    { from:'Activated → Engaged',lost: activated-engaged,  pct: ((activated-engaged)/activated*100).toFixed(0),color:'var(--funnel4)' },
+    { from:'Engaged → Converted',lost: engaged-conversions,pct: ((engaged-conversions)/engaged*100).toFixed(0),color:'var(--accent2)' },
+  ].sort((a,b) => b.lost - a.lost);
+
+  const maxLost = dropoffs[0].lost || 1;
+  document.getElementById('dropoffList').innerHTML = dropoffs.map(d =>
+    `<div class="dropoff-item">
+      <div class="dropoff-step">${d.from}</div>
+      <div class="dropoff-bar-wrap"><div class="dropoff-bar-fill" style="width:${(d.lost/maxLost*100).toFixed(0)}%;background:${d.color}"></div></div>
+      <div class="dropoff-val" style="color:${d.color}">-${d.pct}%</div>
+    </div>`
+  ).join('');
+}
+
+// ── CHARTS ─────────────────────────────────────────
+function renderCharts() {
+  const labels = monthlyData.map(r => r.month);
+  const gc = 'rgba(28,36,56,0.8)', tc = '#445566';
+  const base = {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ labels:{ color:'#8899aa', font:{family:'JetBrains Mono',size:10}, boxWidth:12 } }, tooltip:{ backgroundColor:'#10141f', borderColor:'#1c2438', borderWidth:1, titleColor:'#dde8f0', bodyColor:'#8899aa', titleFont:{family:'Syne'}, bodyFont:{family:'JetBrains Mono',size:11} } },
+    scales:{ x:{ grid:{color:gc}, ticks:{color:tc,font:{family:'JetBrains Mono',size:9},maxRotation:45} }, y:{ grid:{color:gc}, ticks:{color:tc,font:{family:'JetBrains Mono',size:9}} } }
+  };
+
+  mk('dauMauChart', 'line', {
+    labels,
+    datasets:[
+      { label:'MAU', data:monthlyData.map(r=>r.mau), borderColor:'#4ea8ff', backgroundColor:'rgba(78,168,255,0.06)', tension:0.4, pointRadius:3, fill:true },
+      { label:'DAU', data:monthlyData.map(r=>r.dau), borderColor:'#4fffb0', backgroundColor:'rgba(79,255,176,0.06)', tension:0.4, pointRadius:3, fill:true },
+    ]
+  }, base);
+
+  mk('revenueChart', 'bar', {
+    labels,
+    datasets:[
+      { label:'Revenue ($)', data:monthlyData.map(r=>r.revenue), backgroundColor:'rgba(255,200,78,0.55)', borderColor:'#ffc84e', borderWidth:1, yAxisID:'y' },
+      { label:'Signups', type:'line', data:monthlyData.map(r=>r.signups), borderColor:'#4fffb0', backgroundColor:'rgba(79,255,176,0.07)', tension:0.4, pointRadius:3, yAxisID:'y1' },
+    ]
+  }, { ...base, scales:{ x:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},maxRotation:45}}, y:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},callback:v=>'$'+v.toLocaleString()},position:'left'}, y1:{grid:{display:false},ticks:{color:tc,font:{family:'JetBrains Mono',size:9}},position:'right'} } });
+
+  mk('churnChart', 'bar', {
+    labels,
+    datasets:[{ label:'Churned', data:monthlyData.map(r=>r.churned), backgroundColor:'rgba(255,78,106,0.5)', borderColor:'#ff4e6a', borderWidth:1 }]
+  }, base);
+
+  mk('stickinessChart', 'line', {
+    labels,
+    datasets:[{ label:'Stickiness %', data:monthlyData.map(r=>r.mau?+(r.dau/r.mau*100).toFixed(1):0), borderColor:'#c084fc', backgroundColor:'rgba(192,132,252,0.07)', tension:0.4, fill:true, pointRadius:3 }]
+  }, { ...base, scales:{ x:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},maxRotation:45}}, y:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},callback:v=>v+'%'},suggestedMax:60} } });
+
+  mk('conversionChart', 'line', {
+    labels,
+    datasets:[{ label:'Conv. Rate %', data:monthlyData.map(r=>r.signups?+(r.conversions/r.signups*100).toFixed(1):0), borderColor:'#ffc84e', backgroundColor:'rgba(255,200,78,0.07)', tension:0.4, fill:true, pointRadius:3 }]
+  }, { ...base, scales:{ x:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},maxRotation:45}}, y:{grid:{color:gc},ticks:{color:tc,font:{family:'JetBrains Mono',size:9},callback:v=>v+'%'},suggestedMax:15} } });
+}
+
+function mk(id, type, data, opts) {
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id), { type, data, options: opts });
+}
+
+// ── RESET ──────────────────────────────────────────
+function resetDashboard() {
+  monthlyData = []; manualRows = [];
+  document.getElementById('dashboard').classList.remove('visible');
+  document.getElementById('dataTag').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  const panel = document.getElementById('ingestPanel');
+  panel.style.opacity = '1'; panel.style.pointerEvents = ''; panel.style.marginBottom = '28px';
+  document.getElementById('manualRows').innerHTML = '';
+  document.getElementById('manualForm').classList.remove('visible');
+  document.getElementById('manualCard').classList.remove('active');
+  Object.values(charts).forEach(c => c.destroy()); charts = {};
+  document.getElementById('csvInput').value = '';
+  document.getElementById('jsonInput').value = '';
+}
+
+function scrollToIngest() {
+  const panel = document.getElementById('ingestPanel');
+  panel.style.opacity = '1'; panel.style.pointerEvents = '';
+  panel.scrollIntoView({ behavior:'smooth' });
+}
+
+// ── UTILS ──────────────────────────────────────────
+const num = v => isNaN(+v) ? 0 : (+v || 0);
+const fmt = n => Number(n||0).toLocaleString();
+function fmtK(n) {
+  n = Number(n||0);
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return String(n);
+}
+</script>
+</body>
+</html>
